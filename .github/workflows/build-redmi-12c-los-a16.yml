@@ -117,9 +117,9 @@ jobs:
 
       - name: 🪛 Extra Kernel Options
         run: |
+          # Only ${{ env.DEVICE_NAME }} use it.
           cd $GITHUB_WORKSPACE/device_kernel
-
-          cp out/.config $GITHUB_WORKSPACE/config_backup
+          # Nothing
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
@@ -132,15 +132,6 @@ jobs:
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
-
-      - name: 📤 Upload build artifacts for debug
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: debug-files
-          path: |
-            device_kernel/out/
-            device_kernel/arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
