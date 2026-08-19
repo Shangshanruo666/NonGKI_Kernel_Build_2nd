@@ -81,7 +81,7 @@ env:
   GENERATE_DTB: "false" # if u kernel need DTB , but cannot auto generate it. (Only Anykernel3).
   GENERATE_CHIP: "mediatek" # only supported for qcom and mediatek.
 
-  BUILD_DEBUGGER: "false" # Output build errors.
+  BUILD_DEBUGGER: "true" # Output build errors.
   SKIP_PATCH: "false" # Ignore errors found in Patch Debugger.
 
   BUILD_OTHER_CONFIG: "false" # Merge config files.
@@ -119,8 +119,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
 
-          echo "CONFIG_KALLSYMS=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-          echo "CONFIG_KALLSYMS_ALL=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+          cp out/.config $GITHUB_WORKSPACE/config_backup
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
@@ -142,7 +141,6 @@ jobs:
           path: |
             device_kernel/out/
             device_kernel/arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            device_kernel/Anykernel3/anykernel.sh
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
