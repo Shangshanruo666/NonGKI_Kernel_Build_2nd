@@ -134,6 +134,23 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
+      - name: 📤 Upload build artifacts for debug
+        if: always()   # 无论编译成功与否都上传，便于分析失败情况
+        uses: actions/upload-artifact@v7
+        with:
+          name: debug-files
+          path: |
+            device_kernel/out/.config
+            device_kernel/out/Module.symvers
+            device_kernel/out/System.map
+            device_kernel/out/arch/arm64/boot/Image
+            device_kernel/out/arch/arm64/boot/dts/**/*.dtb
+            device_kernel/out/arch/arm64/boot/dts/**/*.dtbo
+            device_kernel/.config   # 如果根目录也有备份
+            device_kernel/arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+            device_kernel/Anykernel3/anykernel.sh
+            device_kernel/error.log   # 如果存在
+
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
 
