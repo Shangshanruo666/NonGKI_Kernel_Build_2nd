@@ -148,21 +148,22 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
-      - name: 📦 Archive full kernel source (excluding out and .git)
+      - name: 📦 Archive full kernel source for diff
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-          tar -czf "$GITHUB_WORKSPACE/kernel_source.tar.gz" --exclude=out --exclude=.git .
-          if [ ! -f "$GITHUB_WORKSPACE/kernel_source.tar.gz" ]; then
+          tar -czf "${{ github.workspace }}/kernel_source.tar.gz" --exclude=out --exclude=.git .
+          if [ ! -f "${{ github.workspace }}/kernel_source.tar.gz" ]; then
             echo "ERROR: kernel_source.tar.gz was not created!" >&2
             exit 1
           fi
-          ls -lh "$GITHUB_WORKSPACE/kernel_source.tar.gz"
-          
-      - name: ⬆️ Upload source artifact
+          ls -lh "${{ github.workspace }}/kernel_source.tar.gz"
+
+      - name: ⬆️ Upload kernel source artifact
         uses: actions/upload-artifact@v7
         with:
           name: kernel_source_${{ env.DEVICE_CODENAME }}
-          path: $GITHUB_WORKSPACE/kernel_source.tar.gz
+          path: ${{ github.workspace }}/kernel_source.tar.gz
+          if-no-files-found: error   # 改为 error 以便立即发现
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
