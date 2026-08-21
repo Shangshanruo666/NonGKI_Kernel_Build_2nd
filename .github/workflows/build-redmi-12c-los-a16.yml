@@ -190,11 +190,11 @@ jobs:
           # 打包
           tar -czf patched_sources.tar.gz patched_sources/
 
-- name: ⬆️ Upload patched sources
-  uses: actions/upload-artifact@v7
-  with:
-    name: patched_sources_${{ env.DEVICE_CODENAME }}
-    path: device_kernel/patched_sources.tar.gz
+      - name: ⬆️ Upload patched sources
+        uses: actions/upload-artifact@v7
+        with:
+          name: patched_sources_${{ env.DEVICE_CODENAME }}
+          path: device_kernel/patched_sources.tar.gz
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
