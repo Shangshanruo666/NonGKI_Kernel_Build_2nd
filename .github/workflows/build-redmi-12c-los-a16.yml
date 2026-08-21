@@ -135,6 +135,18 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
+      - name: 📄 Save .config for inspection
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+          if [ -f out/.config ]; then
+            cp out/.config ./kernel_config
+            echo "✅ .config found and copied."
+          else
+            echo "❌ out/.config not found!"
+            ls -la out/   # 调试：列出 out 内容
+            exit 1
+          fi
+
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
 
