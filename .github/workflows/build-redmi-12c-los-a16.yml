@@ -148,66 +148,17 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
-      - name: 📦 Archive patched kernel sources for debugging
-        if: always()   # 无论构建成功与否都执行，方便调试
+      - name: 📦 Archive full kernel source (excluding out and .git)
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-          mkdir -p patched_sources
-
-          # 列出所有被补丁或钩子脚本修改的关键文件
-          files=(
-            fs/exec.c
-            fs/open.c
-            fs/read_write.c
-            fs/stat.c
-            fs/namei.c
-            fs/namespace.c
-            fs/proc/task_mmu.c
-            fs/proc/base.c
-            fs/proc/cmdline.c
-            fs/proc/fd.c
-            fs/readdir.c
-            fs/statfs.c
-            fs/susfs.c
-            fs/notify/fdinfo.c
-            fs/proc_namespace.c
-            kernel/kallsyms.c
-            kernel/sys.c
-            kernel/reboot.c
-            security/selinux/hooks.c
-            security/selinux/avc.c
-            security/selinux/ss/services.c
-            security/security.c
-            drivers/input/input.c
-            include/linux/seccomp.h
-            include/linux/susfs.h
-            include/linux/susfs_def.h
-            mm/memory.c
-            fs/Makefile
-            drivers/Makefile
-            drivers/Kconfig
-          )
-
-          for f in "${files[@]}"; do
-            if [ -f "$f" ]; then
-              cp --parents "$f" patched_sources/
-            else
-              echo "Warning: $f not found, skipping" >&2
-            fi
-          done
-
-          # 同时保存 .config 和编译日志供参考
-          cp out/.config patched_sources/ 2>/dev/null || true
-          cp error.log patched_sources/ 2>/dev/null || true
-
-          # 打包
-          tar -czf patched_sources.tar.gz patched_sources/
-
-      - name: ⬆️ Upload patched sources
+          # 打包整个源码树，排除 out/（编译输出）和 .git/（版本控制）
+          tar -czf ../kernel_source.tar.gz --exclude=out --exclude=.git .
+          
+      - name: ⬆️ Upload source artifact
         uses: actions/upload-artifact@v7
         with:
-          name: patched_sources_${{ env.DEVICE_CODENAME }}
-          path: device_kernel/patched_sources.tar.gz
+          name: kernel_source_${{ env.DEVICE_CODENAME }}
+          path: $GITHUB_WORKSPACE/kernel_source.tar.gz
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
