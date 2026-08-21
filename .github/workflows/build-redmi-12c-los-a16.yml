@@ -151,8 +151,12 @@ jobs:
       - name: 📦 Archive full kernel source (excluding out and .git)
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-          # 打包整个源码树，排除 out/（编译输出）和 .git/（版本控制）
-          tar -czf ../kernel_source.tar.gz --exclude=out --exclude=.git .
+          tar -czf "$GITHUB_WORKSPACE/kernel_source.tar.gz" --exclude=out --exclude=.git .
+          if [ ! -f "$GITHUB_WORKSPACE/kernel_source.tar.gz" ]; then
+            echo "ERROR: kernel_source.tar.gz was not created!" >&2
+            exit 1
+          fi
+          ls -lh "$GITHUB_WORKSPACE/kernel_source.tar.gz"
           
       - name: ⬆️ Upload source artifact
         uses: actions/upload-artifact@v7
