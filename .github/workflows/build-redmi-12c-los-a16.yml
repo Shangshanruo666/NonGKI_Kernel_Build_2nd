@@ -89,7 +89,7 @@ env:
   BUILD_OTHER_CONFIG: "false" # Merge config files.
   MERGE_CONFIG_FILES: "vendor/debugfs.config,vendor/lahaina_QGKI.config"
 
-  FREE_MORE_SPACE: "false" # if u want get more space, enabled it.
+  FREE_MORE_SPACE: "true" # if u want get more space, enabled it.
 
 jobs:
   build-kernel:
@@ -110,6 +110,19 @@ jobs:
 
       - name: ⚙️ Get neccssary tools
         uses: ./.github/workflows/build-ready
+        
+      - name: 🛠 Limit parallel jobs to avoid Broken pipe
+        run: |
+            mkdir -p $HOME/bin
+            cat > $HOME/bin/nproc << 'EOF'
+            #!/bin/bash
+            echo 4
+            EOF
+            chmod +x $HOME/bin/nproc
+            echo "$HOME/bin" >> $GITHUB_PATH
+            ulimit -n 65536 || true
+            echo "CCACHE_DISABLE=true" >> $GITHUB_ENV
+        
 
       - name: 🪝 Patch Kernel of SUSFS
         uses: ./.github/workflows/patch-susfs
