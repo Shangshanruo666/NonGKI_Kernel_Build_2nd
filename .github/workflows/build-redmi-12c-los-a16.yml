@@ -147,6 +147,12 @@ jobs:
             exit 1
           fi
 
+      - name: ⬆️ Upload .config
+        uses: actions/upload-artifact@v7
+        with:
+          name: kernel_config_${{ env.DEVICE_CODENAME }}
+          path: device_kernel/kernel_config
+
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
 
