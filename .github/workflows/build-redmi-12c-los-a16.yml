@@ -110,18 +110,25 @@ jobs:
 
       - name: ⚙️ Get neccssary tools
         uses: ./.github/workflows/build-ready
+
+      - name: 💾 Free up disk space
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/share/swift /opt/hostedtoolcache/CodeQL
+          df -h /
+
         
       - name: 🛠 Limit parallel jobs to avoid Broken pipe
         run: |
-            mkdir -p $HOME/bin
-            cat > $HOME/bin/nproc << 'EOF'
-            #!/bin/bash
-            echo 4
-            EOF
-            chmod +x $HOME/bin/nproc
-            echo "$HOME/bin" >> $GITHUB_PATH
-            ulimit -n 65536 || true
-            echo "CCACHE_DISABLE=true" >> $GITHUB_ENV
+          mkdir -p $HOME/bin
+          cat > $HOME/bin/nproc << 'EOF'
+          #!/bin/bash
+          echo 2
+          EOF
+          chmod +x $HOME/bin/nproc
+          echo "$HOME/bin" >> $GITHUB_PATH
+          ulimit -n 65536 || true
+          echo "CCACHE_DISABLE=true" >> $GITHUB_ENV
         
 
       - name: 🪝 Patch Kernel of SUSFS
@@ -157,13 +164,13 @@ jobs:
             exit 1
           fi
           ls -lh "${{ github.workspace }}/kernel_source.tar.gz"
-
+      
       - name: ⬆️ Upload kernel source artifact
         uses: actions/upload-artifact@v7
         with:
           name: kernel_source_${{ env.DEVICE_CODENAME }}
           path: ${{ github.workspace }}/kernel_source.tar.gz
-          if-no-files-found: error   # 改为 error 以便立即发现
+          if-no-files-found: error
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
