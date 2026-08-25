@@ -123,6 +123,16 @@ jobs:
           cd $GITHUB_WORKSPACE/device_kernel
           echo "CONFIG_DEBUG_KERNEL=y" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
 
+      - name: 🛠 Limit parallel jobs to avoid Broken pipe
+        run: |
+          mkdir -p $HOME/bin
+          cat > $HOME/bin/nproc << 'EOF'
+          #!/bin/bash
+          echo 1
+          EOF
+          chmod +x $HOME/bin/nproc
+          echo "$HOME/bin" >> $GITHUB_PATH
+
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
 
