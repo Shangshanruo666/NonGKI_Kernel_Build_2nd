@@ -135,22 +135,21 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
-      - name: 📦 Prepare error.log artifact
+      - name: 📦 Archive full kernel source and out
         run: |
-          # 检查 error.log 是否存在（通常在 device_kernel 目录下）
-          if [ -f "$GITHUB_WORKSPACE/device_kernel/error.log" ]; then
-            echo "Found error.log in device_kernel"
-            cp "$GITHUB_WORKSPACE/device_kernel/error.log" "${{ github.workspace }}/error.log"
-          else
-            echo "ERROR: error.log not found in device_kernel!" >&2
+          cd $GITHUB_WORKSPACE/device_kernel
+          zip -r "${{ github.workspace }}/kernel_build.zip" . -x "*.git*"
+          if [ ! -f "${{ github.workspace }}/kernel_build.zip" ]; then
+            echo "ERROR: kernel_build.zip was not created!" >&2
             exit 1
           fi
-      
-      - name: ⬆️ Upload error log artifact
+          ls -lh "${{ github.workspace }}/kernel_build.zip"
+
+      - name: ⬆️ Upload kernel build artifact
         uses: actions/upload-artifact@v7
         with:
-          name: error_log_${{ env.DEVICE_CODENAME }}
-          path: ${{ github.workspace }}/error.log
+          name: kernel_build_${{ env.DEVICE_CODENAME }}
+          path: ${{ github.workspace }}/kernel_build.zip
           if-no-files-found: error
 
       - name: 🔩 Pack Process
