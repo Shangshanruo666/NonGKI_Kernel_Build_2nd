@@ -9,7 +9,7 @@ env:
   DEVICE_NAME : "redmi_12c"
   DEVICE_CODENAME : "earth"
 
-  CUSTOM_CMDS : ""
+  CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu-"
   EXTRA_CMDS : ""
 
   KERNEL_SOURCE : "https://github.com/Shangshanruo666/android_kernel_xiaomi_earth"
@@ -135,21 +135,22 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
-      - name: 📦 Archive full kernel source for diff
+      - name: 📦 Prepare error.log artifact
         run: |
-          cd $GITHUB_WORKSPACE/device_kernel
-          tar -czf "${{ github.workspace }}/kernel_source.tar.gz" --exclude=out --exclude=.git .
-          if [ ! -f "${{ github.workspace }}/kernel_source.tar.gz" ]; then
-            echo "ERROR: kernel_source.tar.gz was not created!" >&2
+          # 检查 error.log 是否存在（通常在 device_kernel 目录下）
+          if [ -f "$GITHUB_WORKSPACE/device_kernel/error.log" ]; then
+            echo "Found error.log in device_kernel"
+            cp "$GITHUB_WORKSPACE/device_kernel/error.log" "${{ github.workspace }}/error.log"
+          else
+            echo "ERROR: error.log not found in device_kernel!" >&2
             exit 1
           fi
-          ls -lh "${{ github.workspace }}/kernel_source.tar.gz"
       
-      - name: ⬆️ Upload kernel source artifact
+      - name: ⬆️ Upload error log artifact
         uses: actions/upload-artifact@v7
         with:
-          name: kernel_source_${{ env.DEVICE_CODENAME }}
-          path: ${{ github.workspace }}/kernel_source.tar.gz
+          name: error_log_${{ env.DEVICE_CODENAME }}
+          path: ${{ github.workspace }}/error.log
           if-no-files-found: error
 
       - name: 🔩 Pack Process
