@@ -138,18 +138,18 @@ jobs:
       - name: 📦 Archive full kernel source and out
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-          zip -r "${{ github.workspace }}/kernel_build.zip" . -x "*.git*"
-          if [ ! -f "${{ github.workspace }}/kernel_build.zip" ]; then
-            echo "ERROR: kernel_build.zip was not created!" >&2
+          tar -czf "${{ github.workspace }}/kernel_build.tar.gz" --exclude=".git" .
+          if [ ! -f "${{ github.workspace }}/kernel_build.tar.gz" ]; then
+            echo "ERROR: kernel_build.tar.gz was not created!" >&2
             exit 1
           fi
-          ls -lh "${{ github.workspace }}/kernel_build.zip"
+          ls -lh "${{ github.workspace }}/kernel_build.tar.gz"
 
       - name: ⬆️ Upload kernel build artifact
         uses: actions/upload-artifact@v7
         with:
           name: kernel_build_${{ env.DEVICE_CODENAME }}
-          path: ${{ github.workspace }}/kernel_build.zip
+          path: ${{ github.workspace }}/kernel_build.tar.gz
           if-no-files-found: error
 
       - name: 🔩 Pack Process
