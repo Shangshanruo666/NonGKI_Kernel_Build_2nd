@@ -139,3 +139,89 @@ jobs:
 
       - name: ✏️ Upload Artifacts
         uses: ./.github/workflows/upload-files
+
+      - name: 🐛 Collect Debug Info
+        if: always()
+        shell: bash
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p debug-info
+          {
+            echo "=== Run ==="
+            echo "run_id=${{ github.run_id }} attempt=${{ github.run_attempt }} event=${{ github.event_name }}"
+            echo "ref=${{ github.ref }} sha=${{ github.sha }}"
+            echo "utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+            echo
+            echo "=== Key env ==="
+            echo "KERNEL_VERSION=${{ env.KERNEL_VERSION }}"
+            echo "KERNELSU_AUTO_FORK=${{ env.KERNELSU_AUTO_FORK }} KERNELSU_METHOD=${{ env.KERNELSU_METHOD }}"
+            echo "SUSFS_ENABLE=${{ env.SUSFS_ENABLE }} SUSFS_FIXED=${{ env.SUSFS_FIXED }} SUSFS_PATCH_FIXED=${{ env.SUSFS_PATCH_FIXED }}"
+            echo "HOOK_METHOD=${{ env.HOOK_METHOD }} KPM_ENABLE=${{ env.KPM_ENABLE }} BUILD_DEBUGGER=${{ env.BUILD_DEBUGGER }}"
+
+            echo
+            echo "=== Workspace top level ==="
+            ls -la
+
+            for r in device_kernel device_kernel/KernelSU NonGKI_Kernel_Patches; do
+              if [ -d "$r/.git" ]; then
+                echo
+                echo "=== git: $r ==="
+                git -C "$r" log -1 --format='head: %H | %ad | %s' --date=iso-strict 2>/dev/null || true
+                echo "-- status --"
+                git -C "$r" status --short 2>/dev/null | head -200 || true
+              fi
+            done
+
+            echo
+            echo "=== faccessat hook markers in fs/open.c ==="
+            grep -n "ksu_handle_faccessat\|getname_flags\|orig_flow" device_kernel/fs/open.c 2>/dev/null | head -40 || echo "(no markers or fs/open.c not found)"
+
+            echo
+            echo "=== SUSFS .rej files ==="
+            find device_kernel -name '*.rej' -not -path '*/out/*' 2>/dev/null | head -50 || true
+
+            echo
+            echo "=== defconfig tail ==="
+            tail -n 40 "device_kernel/arch/${{ env.KERNEL_ARCH }}/configs/${{ env.DEFCONFIG_NAME }}" 2>/dev/null || true
+
+            echo
+            echo "=== error.log tail (150 lines) ==="
+            tail -n 150 device_kernel/error.log 2>/dev/null || echo "(no error.log)"
+          } > debug-info/debug-info.txt 2>&1
+
+          if [ -f device_kernel/out/.config ]; then
+            cp device_kernel/out/.config debug-info/build-final.config || true
+          fi
+
+          echo "[+] Debug info collected:"
+          ls -l debug-info || true
+
+      - name: 📦 Upload Workspace For Debug (even on failure)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: workspace-debug-${{ env.DEVICE_CODENAME }}-${{ github.run_attempt }}
+          path: |
+            ${{ github.workspace }}
+            !${{ github.workspace }}/.git/**
+            !${{ github.workspace }}/*.tar.xz
+            !${{ github.workspace }}/*.tar.gz
+            !${{ github.workspace }}/*.zip
+            !${{ github.workspace }}/*.img
+            !${{ github.workspace }}/clang-custom/**
+            !${{ github.workspace }}/gcc-64/**
+            !${{ github.workspace }}/gcc-32/**
+            !${{ github.workspace }}/mkdtbo/**
+            !${{ github.workspace }}/mkboottools/**
+            !${{ github.workspace }}/device_kernel/.git/**
+            !${{ github.workspace }}/device_kernel/out/**
+            !${{ github.workspace }}/device_kernel/tmp/**
+            !${{ github.workspace }}/device_kernel/*.zip
+            !${{ github.workspace }}/device_kernel/AnyKernel3/.git/**
+            !${{ github.workspace }}/device_kernel/KernelSU/.git/**
+            !${{ github.workspace }}/NonGKI_Kernel_Patches/.git/**
+          include-hidden-files: true
+          follow-symbolic-links: false
+          if-no-files-found: ignore
+          retention-days: 7
